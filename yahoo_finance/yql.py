@@ -43,6 +43,10 @@ except ImportError:
     from urllib import urlencode
 
 import simplejson
+import time
+from datetime import datetime, timedelta
+import logging
+import pdb
 
 # Yahoo! YQL API
 PUBLIC_API_URL  = 'http://query.yahooapis.com/v1/public/yql'
@@ -50,14 +54,37 @@ OAUTH_API_URL   = 'http://query.yahooapis.com/v1/yql'
 DATATABLES_URL  = 'store://datatables.org/alltableswithkeys'
 
 class YQLQuery(object):
+  RETRY_MAX = 3
+  DELAY_TIME = timedelta(seconds = 3)
 
   def __init__(self):
     self.connection = HTTPConnection('query.yahooapis.com')
+    self.retry_count = 0
+    self.cool_down = None
 
   def execute(self, yql, token = None):
-
+    if self.cool_down is not None:
+        delta = datetime.now() - self.cool_down
+        if delta < YQLQuery.DELAY_TIME:
+            logging.debug("waiting for next request")
+            time.sleep(YQLQuery.DELAY_TIME - delta)
+    self.cool_down = datetime.now()
+    logging.debug("sending request, %s" % yql)
+    pdb.set_trace()
     self.connection.request('GET', PUBLIC_API_URL + '?' + urlencode({ 'q': yql, 'format': 'json', 'env': DATATABLES_URL }))
-    return simplejson.loads(self.connection.getresponse().read())
+    resp_content = self.connection.getresponse().read()
+    try:
+        return simplejson.loads(resp_content)
+    except simplejson.JSONDecodeError as ex:
+        logging.debug(ex)
+        if self.retry_count < YQLQuery.RETRY_MAX:
+            logging.debug("Retrying...")
+            time.sleep(1)        
+            self.retry_count += 1
+            return self.execute(yql, token)
+        else:
+            logging.debug("Max retry_count is reached")
+            return []
 
   def __del__(self):
     self.connection.close()

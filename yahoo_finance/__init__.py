@@ -47,6 +47,7 @@ def get_date_range(start_day, end_day, step_days=365, mask='%Y-%m-%d'):
     if start > end:
         raise ValueError('Start date "%s" is greater than "%s"' % (start_day, end_day))
     step = timedelta(days=step_days)
+    print("step: ", step)
     while end - step > start:
         current = end - step
         yield current.strftime(mask), end.strftime(mask)
@@ -267,7 +268,7 @@ class Share(Base):
         :return: list
         """
         hist = []
-        for s, e in get_date_range(start_date, end_date):
+        for s, e in get_date_range(start_date, end_date, 365*2):
             try:
                 query = self._prepare_query(table='historicaldata', startDate=s, endDate=e)
                 result = self._request(query)
