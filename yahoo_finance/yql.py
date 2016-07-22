@@ -46,7 +46,6 @@ import simplejson
 import time
 from datetime import datetime, timedelta
 import logging
-import pdb
 
 # Yahoo! YQL API
 PUBLIC_API_URL  = 'http://query.yahooapis.com/v1/public/yql'
@@ -70,7 +69,6 @@ class YQLQuery(object):
             time.sleep(YQLQuery.DELAY_TIME - delta)
     self.cool_down = datetime.now()
     logging.debug("sending request, %s" % yql)
-    pdb.set_trace()
     self.connection.request('GET', PUBLIC_API_URL + '?' + urlencode({ 'q': yql, 'format': 'json', 'env': DATATABLES_URL }))
     resp_content = self.connection.getresponse().read()
     try:

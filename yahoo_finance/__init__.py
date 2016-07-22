@@ -47,7 +47,6 @@ def get_date_range(start_day, end_day, step_days=365, mask='%Y-%m-%d'):
     if start > end:
         raise ValueError('Start date "%s" is greater than "%s"' % (start_day, end_day))
     step = timedelta(days=step_days)
-    print("step: ", step)
     while end - step > start:
         current = end - step
         yield current.strftime(mask), end.strftime(mask)
